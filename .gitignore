@@ -106,3 +106,4 @@ dist
 # custom
 client/package-lock.json
 client/build
+server/package-lock.json
