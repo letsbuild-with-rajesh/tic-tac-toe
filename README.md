@@ -4,5 +4,5 @@ Tic-Tac-Toe Game
 #### Developed on
 React.js + Node.js
 
-#### Pull Project
-git clone git@github.com:letsbuild-with-rajesh/tic-tac-toe.git
+#### Pull project with
+`git clone git@github.com:letsbuild-with-rajesh/tic-tac-toe.git`
