@@ -1,3 +1,4 @@
+import { React } from 'react';
 import './App.css';
 
 function App() {
@@ -5,10 +6,57 @@ function App() {
   const ANIMATION_DELAY = 100;
   const MAX_MOVES = MATRIX_SIZE * MATRIX_SIZE;
   const EMPTY_CELL = '&nbsp;&nbsp;&nbsp;';
+  const ID_PREFIX = 'cell';
 
   var gameState;
   var movesMade = 0;
   var hasAnyOneWon = false;
+  var isUserAllowedToPlay = true;
+
+
+  const draw = (posArr1, posArr2) => {
+    const canvas = document.getElementsByTagName('canvas')[0];
+
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    if (!canvas.getContext) {
+        return;
+    }
+    const ctx = canvas.getContext('2d');
+
+    let lx = 0, ly = 0;
+    let rx = 0, ry = 0;
+    lx = getElementTopLeft(getIdFromIndices(posArr1[0], posArr1[1])).left + canvas.offsetWidth/10;
+    ly = getElementTopLeft(getIdFromIndices(posArr1[0], posArr1[1])).top - canvas.offsetHeight/10;
+
+    rx = getElementTopLeft(getIdFromIndices(posArr2[0], posArr2[1])).left + canvas.offsetWidth/10;
+    ry = getElementTopLeft(getIdFromIndices(posArr2[0], posArr2[1])).top + canvas.offsetWidth/10;
+
+    // set line stroke and line width
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 4;
+
+    // draw a red line
+    ctx.beginPath();
+    ctx.moveTo(lx, ly);
+    ctx.lineTo(rx, ry);
+    ctx.stroke();
+  }
+
+  const getElementTopLeft = (id) =>{
+    var ele = document.getElementById(id);
+    var top = 0;
+    var left = 0;
+
+    while(ele.tagName !== "BODY") {
+        top += ele.offsetTop;
+        left += ele.offsetLeft;
+        ele = ele.offsetParent;
+    }
+
+    return { top: top, left: left };
+  }
 
   const resetGame = () => {
     gameState = new Array(MATRIX_SIZE);
@@ -27,6 +75,7 @@ function App() {
   const updateGameState = (i, j, val) => {
     let elem = document.getElementById(getIdFromIndices(i, j));
     elem.innerHTML = gameState[i][j] = val;
+    elem.style.color = (val === "X" ? "#FFA500" : "#7B68EE");
     fadeInAnimation(elem);
   }
 
@@ -35,11 +84,13 @@ function App() {
     if (currentOpacity < 1) {
       elem.style.opacity = currentOpacity + 0.1;
       setTimeout(() => { fadeInAnimation(elem) }, ANIMATION_DELAY);
+    } else {
+      isUserAllowedToPlay = true;
     }
   }
 
   const getIdFromIndices = (i, j) => {
-    return "cell" + (i + 1) + (j + 1);
+    return ID_PREFIX + (i + 1) + (j + 1);
   }
 
   const canContinueGame = () => {
@@ -51,13 +102,15 @@ function App() {
   }
 
   const playUsersMove = (i, j) => {
-    if (!canContinueGame() || isCellFilled(i, j)) {
+    if (!canContinueGame() || isCellFilled(i, j) || !isUserAllowedToPlay) {
       return;
     }
+    isUserAllowedToPlay = false;
+
     updateGameState(i, j, 'X');
     movesMade++;
     if (!hasPlayerWon('User', i, j, 'X')) {
-      setTimeout(playComputersMove, 500);
+      setTimeout(playComputersMove, ANIMATION_DELAY * 3);
     }
   }
 
@@ -94,6 +147,14 @@ function App() {
         const pos3 = lv;
 
         if (pos1 === pos3 && pos2 === pos3) {
+          /*draw([
+            Math.min(calcforx, calcsorx, li),
+            Math.min(calcfory, calcsory, lj)
+          ],[
+            Math.max(calcforx, calcsorx, li),
+            Math.max(calcfory, calcsory, lj)
+          ]
+          );*/
           return true;
         }
       }
@@ -156,7 +217,7 @@ function App() {
 
     if (hasWon){
       hasAnyOneWon = hasWon;
-      document.getElementById("message").innerHTML = player + ' won the game!';
+      document.getElementById("message").innerHTML = (player === "User" ? "You": player) + ' won the game!';
     } else if (movesMade >= MAX_MOVES) {
       document.getElementById("message").innerHTML ='It\'s a tie!';
     }
@@ -167,6 +228,9 @@ function App() {
 
   return (
     <div className="App">
+      <h2>Tic Tac Toe!</h2>
+      <h3>Shall we play? &#128512;</h3>
+      <canvas />
       <table>
         <tbody>
           {Array.from(Array(MATRIX_SIZE).keys()).map((rowVal, i) => {
