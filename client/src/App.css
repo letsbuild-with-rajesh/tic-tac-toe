@@ -8,7 +8,8 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
-  padding: 50px;
+  padding-bottom: 20px;
+  padding-top: 20px;
 }
 
 .cell {
@@ -66,9 +67,25 @@ button:active {
   transform: translateY(2px);
 }
 
-canvas {
+svg{
   position: absolute;
-  pointer-events:none;
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 100vh;
-  width: 100vw;
+  pointer-events: none;
+}
+
+#strikeLine{
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  stroke-width: 4px;
+  stroke: white;
+  stroke-linecap: round;
+  pointer-events: none;
 }
