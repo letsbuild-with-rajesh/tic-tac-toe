@@ -221,12 +221,15 @@ function App() {
     return hasWon;
   }
 
-  window.onload = resetGame;
-  window.onresize = () => {
+  const redrawOnScreenChange = () => {
     if (hasAnyOneWon) {
       drawStrikeLine(wonIds[0], wonIds[1], false);
     }
-  };
+  }
+
+  window.onload = resetGame;
+  window.onresize = redrawOnScreenChange;
+  window.onscroll = redrawOnScreenChange;
 
   return (
     <div className="App">
