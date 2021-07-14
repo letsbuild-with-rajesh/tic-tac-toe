@@ -1,20 +1,35 @@
-import { React } from 'react';
+import { React, useState, useRef } from 'react';
+import * as GameMoveMath from './GameMoveMath';
 import './App.css';
 
 function App() {
   const MATRIX_SIZE = 3;
   const ANIMATION_DELAY = 100;
   const MAX_MOVES = MATRIX_SIZE * MATRIX_SIZE;
-  const EMPTY_CELL = '&nbsp;&nbsp;&nbsp;';
   const CELL_ID_PREFIX = 'cell';
   const ANIMATE_STEPS = 10;
   const STRIKE_ANIMATION_SECONDS = 0.5;
 
-  var gameState;
-  var movesMade = 0;
-  var hasAnyOneWon = false;
-  var isUserAllowedToPlay = true;
-  var wonIds = [];
+  const getIdFromIndices = (i, j) => {
+    return CELL_ID_PREFIX + (i + 1) + (j + 1);
+  }
+
+  const [ message, setDisplayMessage ] = useState('');
+  const [ gameState, setGameState ] = useState([...Array(MATRIX_SIZE)].map(e => Array(MATRIX_SIZE).fill('')));
+  const [ wonState, setWonState ] = useState(false);
+  const [ wonPositions, setWonPositions ] = useState([getIdFromIndices(0, 0) , getIdFromIndices(2, 2)]);
+  const [ isUserAllowedToPlay, setUserAllowedToPlay ] = useState(true);
+  const movesMadeRef= useRef(0);
+
+  const updateGameState = (i, j, val) => {
+    let elem = document.getElementById(getIdFromIndices(i, j));
+    let tmpState = [...gameState];
+    tmpState[i][j] = val;
+    
+    movesMadeRef.current++;
+    setGameState(tmpState);
+    fadeInAnimation(elem);
+  }
 
   const drawStrikeLine = (startId, endId, animate) => {
     let strikeLineEl = document.getElementById("strikeLine");
@@ -53,48 +68,18 @@ function App() {
     }
   }
 
-  const resetGame = () => {
-    gameState = new Array(MATRIX_SIZE);
-    for (let i = 0; i < MATRIX_SIZE; i++) {
-      gameState[i] = new Array(MATRIX_SIZE);
-      for (let j = 0; j < MATRIX_SIZE; j++) {
-        gameState[i][j] = '';
-        document.getElementById(getIdFromIndices(i, j)).innerHTML = EMPTY_CELL;
-        document.getElementById("message").innerHTML = '&nbsp;';
-      }
-    }
-    movesMade = 0;
-    hasAnyOneWon = false;
-    let strikeLineEl = document.getElementById("strikeLine");
-    strikeLineEl.setAttribute('x1', 0);
-    strikeLineEl.setAttribute('y1', 0);
-    strikeLineEl.setAttribute('x2', 0);
-    strikeLineEl.setAttribute('y2', 0);
-  }
-
-  const updateGameState = (i, j, val) => {
-    let elem = document.getElementById(getIdFromIndices(i, j));
-    elem.innerHTML = gameState[i][j] = val;
-    elem.style.color = (val === "X" ? "#FFA500" : "#7B68EE");
-    fadeInAnimation(elem);
-  }
-
   const fadeInAnimation = (elem) => {
     let currentOpacity = Number(elem.style.opacity);
     if (currentOpacity < 1) {
       elem.style.opacity = currentOpacity + 0.1;
       setTimeout(() => { fadeInAnimation(elem) }, ANIMATION_DELAY);
     } else {
-      isUserAllowedToPlay = true;
+      setUserAllowedToPlay(true);
     }
   }
 
-  const getIdFromIndices = (i, j) => {
-    return CELL_ID_PREFIX + (i + 1) + (j + 1);
-  }
-
   const canContinueGame = () => {
-    return ((movesMade < MAX_MOVES) && !hasAnyOneWon);
+    return ((movesMadeRef.current < MAX_MOVES) && !wonState);
   }
 
   const isCellFilled = (i, j) => {
@@ -105,10 +90,8 @@ function App() {
     if (!canContinueGame() || isCellFilled(i, j) || !isUserAllowedToPlay) {
       return;
     }
-    isUserAllowedToPlay = false;
-
+    setUserAllowedToPlay(false);
     updateGameState(i, j, 'X');
-    movesMade++;
     if (!hasPlayerWon('User', i, j, 'X')) {
       setTimeout(playComputersMove, ANIMATION_DELAY * 3);
     }
@@ -128,29 +111,40 @@ function App() {
     }
 
     updateGameState(i, j, 'O');
-    movesMade++;
-
     hasPlayerWon('Computer', i, j, 'O');
   }
 
   const hasPlayerWon = (player, lasti, lastj, lastVal) => {
     // for - First Outer Ring, Sor - Second Outer Ring
-    const isItAStrike = (forx, fory, sorx, sory, li, lj, lv) => {
-      for (let i = 0; i < forx.length; i++) {
-        const calcforx = li + forx[i];
-        const calcfory = lj + fory[i];
-        const calcsorx = li + sorx[i];
-        const calcsory = lj + sory[i];
+    const isItAStrike = (data) => {
+      for (let i = 0; i < data[0].length; i++) {
+        const calcforx = lasti + data[0][i];
+        const calcfory = lastj + data[1][i];
+        const calcsorx = lasti + data[2][i];
+        const calcsory = lastj + data[3][i];
 
         const pos1 = (gameState[calcforx] && gameState[calcforx][calcfory]) ? gameState[calcforx][calcfory] : '';
         const pos2 = (gameState[calcsorx] && gameState[calcsorx][calcsory]) ? gameState[calcsorx][calcsory] : '';
-        const pos3 = lv;
+        const pos3 = lastVal;
 
         if (pos1 === pos3 && pos2 === pos3) {
-          wonIds = [];
-          wonIds.push(getIdFromIndices(Math.min(calcforx, calcsorx, li), Math.min(calcfory, calcsory, lj)));
-          wonIds.push(getIdFromIndices(Math.max(calcforx, calcsorx, li), Math.max(calcfory, calcsory, lj)));
+          let orderedIndexes = [];
+          for (let m = 0; m < 3; m++) {
+            for (let n = 0; n < 3; n++) {
+              if ((n === calcforx && m === calcfory) ||
+                  (n === calcsorx && m === calcsory) ||
+                  (n === lasti && m === lastj)) {
+                // Order indexes from left to right positions
+                orderedIndexes.push([n, m]);
+              }
+            }
+          }
 
+          let wonIds = [];
+          wonIds.push(getIdFromIndices(orderedIndexes[0][0], orderedIndexes[0][1]));
+          wonIds.push(getIdFromIndices(orderedIndexes[2][0], orderedIndexes[2][1]));
+
+          setWonPositions([wonIds[0], wonIds[1]]);
           drawStrikeLine(wonIds[0], wonIds[1], true);
           return true;
         }
@@ -159,71 +153,35 @@ function App() {
     }
 
     let hasWon = false;
-    /*
 
-    *****
-    *****
-    **#**
-    *****
-    *****
-
-    LeftHorizontal      -> [-1,  0][-2,  0]
-    LeftTopDiagonal     -> [-1,  1][-2,  2]
-
-    TopVertical         -> [ 0,  1][ 0,  2]
-    RightTopDiagonal    -> [ 1,  1][ 2,  2]
-
-    RightHorizontal     -> [ 1,  0][ 2,  0]
-    RightBottomDiagonal -> [ 1, -1][ 2, -2]
-
-    BottomVertical      -> [ 0, -1][ 0, -2]
-    LeftBottomDiagonal  -> [-1, -1][-2, -2]
-    */
-
-    hasWon = isItAStrike(
-      [-1, -1, 0, 1, 1, 1, 0, -1],
-      [0, 1, 1, 1, 0, -1, -1, -1],
-      [-2, -2, 0, 2, 2, 2, 0, -2],
-      [0, 2, 2, 2, 0, -2, -2, -2],
-      lasti,
-      lastj,
-      lastVal
-    );
-
-    /*
-    ***
-    *#*
-    ***
-
-    Horizontal     -> [-1,  0][ 1,  0]
-    Diagonal       -> [-1,  1][ 1, -1]
-    Vertical       -> [ 0,  1][ 0, -1]
-    ReverseDiagnol -> [ 1,  1][-1, -1]
-    */
-
-    // Skip if already won with previous check
-    hasWon = hasWon || isItAStrike(
-      [-1, -1, 0, 1],
-      [0, 1, 1, 1],
-      [1, 1, 0, -1],
-      [0, -1, -1, -1],
-      lasti,
-      lastj,
-      lastVal
-    );
+    hasWon = isItAStrike(GameMoveMath.ora);
+    hasWon = hasWon || isItAStrike(GameMoveMath.ira);
 
     if (hasWon) {
-      hasAnyOneWon = hasWon;
-      document.getElementById("message").innerHTML = (player === "User" ? "You" : player) + ' won the game!';
-    } else if (movesMade >= MAX_MOVES) {
-      document.getElementById("message").innerHTML = 'It\'s a tie!';
+      setWonState(hasWon);
+      setDisplayMessage((player === "User" ? "You" : player) + ' won the game!');
+    } else if (movesMadeRef.current >= MAX_MOVES) {
+      setDisplayMessage('It\'s a tie!');
     }
     return hasWon;
   }
 
+  const resetGame = () => {
+    setGameState([...Array(MATRIX_SIZE)].map(e => Array(MATRIX_SIZE).fill('')));
+    setDisplayMessage('');
+    movesMadeRef.current = 0;
+    setWonState(false);
+
+    let strikeLineEl = document.getElementById("strikeLine");
+    strikeLineEl.setAttribute('x1', 0);
+    strikeLineEl.setAttribute('y1', 0);
+    strikeLineEl.setAttribute('x2', 0);
+    strikeLineEl.setAttribute('y2', 0);
+  }
+
   const redrawOnScreenChange = () => {
-    if (hasAnyOneWon) {
-      drawStrikeLine(wonIds[0], wonIds[1], false);
+    if (wonState) {
+      drawStrikeLine(wonPositions[0], wonPositions[1], false);
     }
   }
 
@@ -236,23 +194,27 @@ function App() {
       <h2>Tic Tac Toe!</h2>
       <h3>Shall we play? &#128512;</h3>
       <svg>
-        <line id="strikeLine"></line>
+        <line id="strikeLine"/>
       </svg>
       <table>
         <tbody>
-          {Array.from(Array(MATRIX_SIZE).keys()).map((rowVal, i) => {
+          {gameState.map((rowVal, i) => {
             return (
               <tr key={"row" + i}>
-                {Array.from(Array(MATRIX_SIZE).keys()).map((cellVal, j) => {
+                {rowVal.map((cellVal, j) => {
                   let id = getIdFromIndices(i, j);
-                  return <td key={"key-" + id} onClick={() => { playUsersMove(i, j) }}><p className="cell" id={id} /></td>
+                  return (<td key={"key-" + id} onClick={() => { playUsersMove(i, j) }}>
+                           <p className="cell" style={{color: (cellVal === "X"? "#FFA500": "#7B68EE")}} id={id}>
+                             {cellVal === '' ? <>&nbsp;&nbsp;&nbsp;</> : cellVal}
+                           </p>
+                         </td>);
                 })}
               </tr>)
           })}
         </tbody>
       </table>
       <br />
-      <p id="message">&nbsp;</p>
+      <p id="message">{message === '' ? <>&nbsp;</> : message}</p>
       <br />
       <button onClick={() => { resetGame() }}>Reset Game</button>
     </div>
