@@ -103,7 +103,7 @@ dist
 # TernJS port file
 .tern-port
 
-# custom
+# custom project directories and files
 client/package-lock.json
 client/build
 server/package-lock.json

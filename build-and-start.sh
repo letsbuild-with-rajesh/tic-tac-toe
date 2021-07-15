@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Build script to build client and server side of project
+# Requires "dev" or "prod" as argument
+
 mode=$1
 
 if [ -z "$mode" ]; then
