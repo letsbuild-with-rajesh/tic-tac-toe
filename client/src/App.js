@@ -25,7 +25,7 @@ function App() {
     let elem = document.getElementById(getIdFromIndices(i, j));
     let tmpState = [...gameState];
     tmpState[i][j] = val;
-    
+
     movesMadeRef.current++;
     setGameState(tmpState);
     fadeInAnimation(elem);
