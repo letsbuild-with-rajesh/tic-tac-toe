@@ -1,4 +1,4 @@
-# Client-side project of tic-toc-toe
+## Client-side project of tic-toc-toe
 
-## Developed on
+### Developed on
 HTML + CSS + Javascript + React
