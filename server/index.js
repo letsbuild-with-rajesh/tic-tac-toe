@@ -9,7 +9,7 @@ const apisList = apiRequests.apisList;
 const handleApiRequests = apiRequests.handleApiRequests;
 const handleStaticRequests = require('./static_requests');
 
-const SERVER_PORT = 2000;
+const SERVER_PORT = 3010;
 
 const server = http.createServer((req, res) => {
   if (apisList.includes(req.url)) {
