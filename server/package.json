@@ -9,10 +9,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/letsbuild-with-rajesh/tic-tac-toe.git"
+    "url": "https://github.com/letsbuild-with-rajesh/tic-tac-toe.git"
   },
   "author": "",
-  "license": "MIT",
+  "license": "ISC",
   "bugs": {
     "url": "https://github.com/letsbuild-with-rajesh/tic-tac-toe/issues"
   },
