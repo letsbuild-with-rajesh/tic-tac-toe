@@ -22,9 +22,6 @@ module.exports = (req, res) => {
     '.wasm': 'application/wasm'
   };
 
-  const baseURL = 'http://' + req.headers.host + '/';
-  const urlObj = new URL(req.url, baseURL);
-
   let filePath = req.url;
   if (filePath == '/') {
     filePath = '/index.html';

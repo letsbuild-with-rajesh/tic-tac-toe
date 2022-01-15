@@ -1,22 +1,13 @@
 /* Index of server side requests */
 
 const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const apiRequests = require('./api_requests');
+require('dotenv').config()
+const handleRequests = require('./handle_requests');
 
-const apisList = apiRequests.apisList;
-const handleApiRequests = apiRequests.handleApiRequests;
-const handleStaticRequests = require('./static_requests');
-
-const SERVER_PORT = 3010;
+const SERVER_PORT = process.env.PORT;
 
 const server = http.createServer((req, res) => {
-  if (apisList.includes(req.url)) {
-    handleApiRequests(req, res);
-  } else {
-    handleStaticRequests(req, res);
-  }
+  handleRequests(req, res);
 });
 
 server.listen(SERVER_PORT);

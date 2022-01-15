@@ -2,6 +2,9 @@
 
 # Build script to build client and server side of project
 # Requires "dev" or "prod" as argument
+# dev - just starts one process to use for development
+# prod - restarts the running (production needs to be
+#        started manually for initial run) pm2 app
 
 mode=$1
 
